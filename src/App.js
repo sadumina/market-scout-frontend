@@ -2,30 +2,33 @@ import React, { useEffect, useState } from "react";
 import axios from "axios";
 import "./App.css";
 
-// Products with optional reference links
 const PRODUCTS = [
-  { name: "PFAS", link: "https://www.epa.gov/pfas" },
-  { name: "Soil Remediation", link: "https://www.sciencedirect.com/topics/earth-and-planetary-sciences/soil-remediation" },
-  { name: "Mining", link: "https://www.mining.com" },
-  { name: "Gold Recovery", link: "https://www.sciencedirect.com/topics/earth-and-planetary-sciences/gold-recovery" },
-  { name: "Drinking Water", link: "https://www.who.int/news-room/fact-sheets/detail/drinking-water" },
-  { name: "Wastewater Treatment", link: "https://www.sciencedirect.com/topics/earth-and-planetary-sciences/wastewater-treatment" },
-  { name: "Air & Gas Purification", link: "https://www.sciencedirect.com/topics/earth-and-planetary-sciences/air-purification" },
-  { name: "Mercury Removal", link: "https://www.epa.gov/mercury" },
-  { name: "Food & Beverage", link: "https://www.sciencedirect.com/topics/food-science/activated-carbon" },
-  { name: "Energy Storage", link: "https://www.sciencedirect.com/topics/engineering/energy-storage" },
-  { name: "Catalyst Support", link: "https://www.sciencedirect.com/topics/engineering/catalyst-support" },
-  { name: "Automotive Filters", link: "https://www.sciencedirect.com/topics/engineering/automotive-filters" },
-  { name: "Medical & Pharma", link: "https://www.sciencedirect.com/topics/medicine-and-dentistry/activated-carbon" },
-  { name: "Nuclear Applications", link: "https://www.sciencedirect.com/topics/engineering/nuclear-technology" },
-  { name: "EDLC", link: "https://www.sciencedirect.com/science/article/pii/S0264127522006396" },
-  { name: "Silicon Anodes", link: "https://www.e-nxtrade.com/en/product/list/id/18" },
-  { name: "Lithium Iron Batteries", link: "https://www.sciencedirect.com/topics/engineering/lithium-iron-phosphate" },
-  { name: "Carbon Block Filters", link: "https://www.sciencedirect.com/topics/engineering/carbon-block" },
-
+  { name: "PFAS" },
+  { name: "Soil Remediation" },
+  { name: "Mining" },
+  { name: "Gold Recovery" },
+  { name: "Drinking Water" },
+  { name: "Wastewater Treatment" },
+  { name: "Air & Gas Purification" },
+  { name: "Mercury Removal" },
+  { name: "Food & Beverage" },
+  { name: "Energy Storage" },
+  { name: "Catalyst Support" },
+  { name: "Automotive Filters" },
+  { name: "Medical & Pharma" },
+  { name: "Nuclear Applications" },
+  { name: "EDLC" },
+  { name: "Silicon Anodes" },
+  { name: "Lithium Iron Batteries" },
+  { name: "Carbon Block Filters" },
+  { name: "Activated Carbon for Gold Recovery" },
+  { name: "Activated Carbon for EDLC" },
+  { name: "Activated Carbon for Silicon Anodes" },
+  { name: "Jacobi Updates" },
+  { name: "Haycarb Updates" },
 ];
 
-const API_BASE = "https://scout-agent-rslp.onrender.com"; // change this after deploy
+const API_BASE = "https://scout-agent-rslp.onrender.com"; // change after deploy
 
 function App() {
   const [opportunities, setOpportunities] = useState([]);
@@ -34,7 +37,6 @@ function App() {
   const [selectedProduct, setSelectedProduct] = useState("PFAS");
   const [loading, setLoading] = useState(false);
 
-  // Fetch data from backend
   const fetchData = async (product = "PFAS") => {
     try {
       setLoading(true);
@@ -56,7 +58,6 @@ function App() {
     fetchData(selectedProduct);
   }, [selectedProduct]);
 
-  // Apply day/month/year filters
   const applyFilter = (type) => {
     setFilterType(type);
     const now = new Date();
@@ -76,32 +77,26 @@ function App() {
         } else if (type === "year") {
           return oppDate.getFullYear() === now.getFullYear();
         }
-        return true; // "all"
+        return true;
       })
     );
   };
 
-  // Format dates nicely
   const formatDate = (dateString) => {
     if (!dateString) return "N/A";
     const date = new Date(dateString);
     const now = new Date();
     const diffInHours = (now - date) / (1000 * 60 * 60);
 
-    if (diffInHours < 24) {
-      return `${Math.floor(diffInHours)} hours ago`;
-    } else if (diffInHours < 48) {
-      return "Yesterday";
-    } else {
-      return date.toLocaleDateString("en-US", {
-        year: "numeric",
-        month: "short",
-        day: "numeric",
-      });
-    }
+    if (diffInHours < 24) return `${Math.floor(diffInHours)} hours ago`;
+    if (diffInHours < 48) return "Yesterday";
+    return date.toLocaleDateString("en-US", {
+      year: "numeric",
+      month: "short",
+      day: "numeric",
+    });
   };
 
-  // Filter label
   const getFilterDisplayText = () => {
     switch (filterType) {
       case "day": return "Today";
@@ -110,8 +105,6 @@ function App() {
       default: return "All Time";
     }
   };
-
-  const currentProduct = PRODUCTS.find((p) => p.name === selectedProduct);
 
   return (
     <div className="app-container">
@@ -136,27 +129,16 @@ function App() {
           </select>
         </div>
 
-        {/* Reference Link */}
-        {currentProduct?.link && (
-          <a
-            href={currentProduct.link}
-            target="_blank"
-            rel="noreferrer"
-            className="reference-link"
-          >
-            📖 Learn more about {selectedProduct}
-          </a>
+        {/* Time Filters (hide for Jacobi & Haycarb) */}
+        {!(selectedProduct === "Jacobi Updates" || selectedProduct === "Haycarb Updates") && (
+          <div className="filter-buttons">
+            <button className={filterType === "all" ? "active" : ""} onClick={() => applyFilter("all")}>🌎 All</button>
+            <button className={filterType === "day" ? "active" : ""} onClick={() => applyFilter("day")}>📅 Today</button>
+            <button className={filterType === "month" ? "active" : ""} onClick={() => applyFilter("month")}>🗓️ This Month</button>
+            <button className={filterType === "year" ? "active" : ""} onClick={() => applyFilter("year")}>📆 This Year</button>
+          </div>
         )}
 
-        {/* Time Filters */}
-        <div className="filter-buttons">
-          <button className={filterType === "all" ? "active" : ""} onClick={() => applyFilter("all")}>🌎 All</button>
-          <button className={filterType === "day" ? "active" : ""} onClick={() => applyFilter("day")}>📅 Today</button>
-          <button className={filterType === "month" ? "active" : ""} onClick={() => applyFilter("month")}>🗓️ This Month</button>
-          <button className={filterType === "year" ? "active" : ""} onClick={() => applyFilter("year")}>📆 This Year</button>
-        </div>
-
-        {/* Refresh Button */}
         <button
           className="refresh-btn"
           onClick={() => fetchData(selectedProduct)}
@@ -168,75 +150,56 @@ function App() {
 
       <main className="main-content">
         {loading ? (
-          <div className="loading">⏳ Loading latest {selectedProduct} opportunities...</div>
+          <div className="loading">⏳ Loading {selectedProduct} updates...</div>
         ) : filtered.length === 0 ? (
           <div className="empty">
-            <h3>No opportunities found</h3>
-            <p>No opportunities for <strong>{selectedProduct}</strong> ({getFilterDisplayText()}).</p>
+            <h3>No updates found</h3>
+            <p>No updates for <strong>{selectedProduct}</strong> ({getFilterDisplayText()}).</p>
           </div>
         ) : (
           <>
-            {/* Results Summary */}
-            <div
-              style={{
-                marginBottom: "1.5rem",
-                padding: "1rem",
-                background: "white",
-                borderRadius: "12px",
-                border: "1px solid var(--border)",
-                display: "flex",
-                justifyContent: "space-between",
-                alignItems: "center",
-                flexWrap: "wrap",
-                gap: "1rem",
-              }}
-            >
-              <div>
-                <strong>{filtered.length}</strong> opportunities found for <strong>{selectedProduct}</strong>
+            {selectedProduct === "Jacobi Updates" || selectedProduct === "Haycarb Updates" ? (
+              // ✅ Custom UI for Jacobi & Haycarb
+              <div className="jacobi-haycarb-section">
+                <h2>{selectedProduct}</h2>
+                <ul className="updates-list">
+                  {filtered.map((item, idx) => (
+                    <li key={idx}>
+                      <a href={item.link} target="_blank" rel="noreferrer">
+                        {item.title}
+                      </a>
+                    </li>
+                  ))}
+                </ul>
               </div>
-              <div
-                style={{
-                  fontSize: "0.875rem",
-                  color: "var(--text-secondary)",
-                  display: "flex",
-                  alignItems: "center",
-                  gap: "0.5rem",
-                }}
-              >
-                <span
-                  style={{
-                    width: "8px",
-                    height: "8px",
-                    borderRadius: "50%",
-                    background: "var(--success)",
-                    animation: "pulse 2s infinite",
-                  }}
-                ></span>
-                Filter: {getFilterDisplayText()}
-              </div>
-            </div>
-
-            {/* Cards */}
-            <div className="card-grid">
-              {filtered.map((opp, index) => (
-                <div key={opp.link || index} className="card">
-                  <h2>{opp.title}</h2>
-                  <div className="meta">
-                    <strong>Source:</strong> {opp.source} <br />
-                    <strong>Date:</strong> {formatDate(opp.date)}
-                  </div>
-                  <p className="summary">{opp.summary}</p>
-                  <a
-                    href={opp.link}
-                    target="_blank"
-                    rel="noreferrer"
-                    className="read-more"
-                  >
-                    🔗 Read Full Article
-                  </a>
+            ) : (
+              // ✅ Default UI
+              <>
+                <div className="results-summary">
+                  <strong>{filtered.length}</strong> opportunities for <strong>{selectedProduct}</strong>
                 </div>
-              ))}
-            </div>
+                <div className="card-grid">
+                  {filtered.map((opp, index) => (
+                    <div key={opp.link || index} className="card">
+                      <h2>{opp.title}</h2>
+                      <div className="meta">
+                        <strong>Source:</strong> {opp.source} <br />
+                        <strong>Date:</strong> {formatDate(opp.date)}
+                      </div>
+                      <p className="summary">{opp.summary}</p>
+                      <a
+                        href={opp.link}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="read-more"
+                      >
+                        🔗 Read Full Article
+                      </a>
+                    </div>
+                  ))}
+                </div>
+              </>
+            )}
           </>
         )}
       </main>
