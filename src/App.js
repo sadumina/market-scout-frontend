@@ -24,8 +24,7 @@ const PRODUCTS = [
   { name: "Activated Carbon for Gold Recovery" },
   { name: "Activated Carbon for EDLC" },
   { name: "Activated Carbon for Silicon Anodes" },
-  { name: "Jacobi Updates" },
-  { name: "Haycarb Updates" },
+  
 ];
 
 const API_BASE = "https://scout-agent-rslp.onrender.com"; // change after deploy
