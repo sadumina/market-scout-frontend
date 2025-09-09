@@ -108,7 +108,7 @@ function App() {
   return (
     <div className="app-container">
       <header className="header">
-        <h1>AI Market Scout Dashboard</h1>
+        <h1>HAYCARB Market Scout</h1>
         <p>Stay ahead with real-time environmental & market intelligence</p>
 
         {/* Product Dropdown */}
