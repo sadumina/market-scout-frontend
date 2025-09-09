@@ -2,23 +2,30 @@ import React, { useEffect, useState } from "react";
 import axios from "axios";
 import "./App.css";
 
-// Expanded product list based on Haycarb portfolio
+// Products with optional reference links
 const PRODUCTS = [
-  "PFAS",
-  "Soil Remediation",
-  "Mining",
-  "Gold Recovery",
-  "Drinking Water",
-  "Wastewater Treatment",
-  "Air & Gas Purification",
-  "Mercury Removal",
-  "Food & Beverage",
-  "Energy Storage",
-  "Catalyst Support",
-  "Automotive Filters",
-  "Medical & Pharma",
-  "Nuclear Applications"
+  { name: "PFAS", link: "https://www.epa.gov/pfas" },
+  { name: "Soil Remediation", link: "https://www.sciencedirect.com/topics/earth-and-planetary-sciences/soil-remediation" },
+  { name: "Mining", link: "https://www.mining.com" },
+  { name: "Gold Recovery", link: "https://www.sciencedirect.com/topics/earth-and-planetary-sciences/gold-recovery" },
+  { name: "Drinking Water", link: "https://www.who.int/news-room/fact-sheets/detail/drinking-water" },
+  { name: "Wastewater Treatment", link: "https://www.sciencedirect.com/topics/earth-and-planetary-sciences/wastewater-treatment" },
+  { name: "Air & Gas Purification", link: "https://www.sciencedirect.com/topics/earth-and-planetary-sciences/air-purification" },
+  { name: "Mercury Removal", link: "https://www.epa.gov/mercury" },
+  { name: "Food & Beverage", link: "https://www.sciencedirect.com/topics/food-science/activated-carbon" },
+  { name: "Energy Storage", link: "https://www.sciencedirect.com/topics/engineering/energy-storage" },
+  { name: "Catalyst Support", link: "https://www.sciencedirect.com/topics/engineering/catalyst-support" },
+  { name: "Automotive Filters", link: "https://www.sciencedirect.com/topics/engineering/automotive-filters" },
+  { name: "Medical & Pharma", link: "https://www.sciencedirect.com/topics/medicine-and-dentistry/activated-carbon" },
+  { name: "Nuclear Applications", link: "https://www.sciencedirect.com/topics/engineering/nuclear-technology" },
+  { name: "EDLC", link: "https://www.sciencedirect.com/science/article/pii/S0264127522006396" },
+  { name: "Silicon Anodes", link: "https://www.e-nxtrade.com/en/product/list/id/18" },
+  { name: "Lithium Iron Batteries", link: "https://www.sciencedirect.com/topics/engineering/lithium-iron-phosphate" },
+  { name: "Carbon Block Filters", link: "https://www.sciencedirect.com/topics/engineering/carbon-block" },
+
 ];
+
+const API_BASE = "http://localhost:8000"; // change this after deploy
 
 function App() {
   const [opportunities, setOpportunities] = useState([]);
@@ -27,18 +34,17 @@ function App() {
   const [selectedProduct, setSelectedProduct] = useState("PFAS");
   const [loading, setLoading] = useState(false);
 
-  // Fetch opportunities from backend
+  // Fetch data from backend
   const fetchData = async (product = "PFAS") => {
     try {
       setLoading(true);
       const res = await axios.get(
-        `http://localhost:8000/opportunities?product=${encodeURIComponent(product)}`
+        `${API_BASE}/opportunities?product=${encodeURIComponent(product)}`
       );
       setOpportunities(res.data);
       setFiltered(res.data);
     } catch (err) {
       console.error("Error fetching opportunities:", err);
-      // Set empty arrays on error
       setOpportunities([]);
       setFiltered([]);
     } finally {
@@ -55,42 +61,47 @@ function App() {
     setFilterType(type);
     const now = new Date();
 
-    if (type === "day") {
-      const today = now.toISOString().slice(0, 10);
-      setFiltered(opportunities.filter((opp) => opp.date?.slice(0, 10) === today));
-    } else if (type === "month") {
-      const ym = now.toISOString().slice(0, 7);
-      setFiltered(opportunities.filter((opp) => opp.date?.slice(0, 7) === ym));
-    } else if (type === "year") {
-      const year = now.getFullYear().toString();
-      setFiltered(opportunities.filter((opp) => opp.date?.startsWith(year)));
-    } else {
-      setFiltered(opportunities);
-    }
+    setFiltered(
+      opportunities.filter((opp) => {
+        if (!opp.date) return false;
+        const oppDate = new Date(opp.date);
+
+        if (type === "day") {
+          return oppDate.toDateString() === now.toDateString();
+        } else if (type === "month") {
+          return (
+            oppDate.getMonth() === now.getMonth() &&
+            oppDate.getFullYear() === now.getFullYear()
+          );
+        } else if (type === "year") {
+          return oppDate.getFullYear() === now.getFullYear();
+        }
+        return true; // "all"
+      })
+    );
   };
 
-  // Enhanced date formatting
+  // Format dates nicely
   const formatDate = (dateString) => {
     if (!dateString) return "N/A";
-    
     const date = new Date(dateString);
     const now = new Date();
     const diffInHours = (now - date) / (1000 * 60 * 60);
-    
+
     if (diffInHours < 24) {
       return `${Math.floor(diffInHours)} hours ago`;
     } else if (diffInHours < 48) {
       return "Yesterday";
     } else {
-      return date.toLocaleDateString('en-US', {
-        year: 'numeric',
-        month: 'short',
-        day: 'numeric'
+      return date.toLocaleDateString("en-US", {
+        year: "numeric",
+        month: "short",
+        day: "numeric",
       });
     }
   };
 
-  // Get filter display text
+  // Filter label
   const getFilterDisplayText = () => {
     switch (filterType) {
       case "day": return "Today";
@@ -99,6 +110,8 @@ function App() {
       default: return "All Time";
     }
   };
+
+  const currentProduct = PRODUCTS.find((p) => p.name === selectedProduct);
 
   return (
     <div className="app-container">
@@ -116,44 +129,36 @@ function App() {
             onChange={(e) => setSelectedProduct(e.target.value)}
           >
             {PRODUCTS.map((p) => (
-              <option key={p} value={p}>
-                {p}
+              <option key={p.name} value={p.name}>
+                {p.name}
               </option>
             ))}
           </select>
         </div>
 
+        {/* Reference Link */}
+        {currentProduct?.link && (
+          <a
+            href={currentProduct.link}
+            target="_blank"
+            rel="noreferrer"
+            className="reference-link"
+          >
+            📖 Learn more about {selectedProduct}
+          </a>
+        )}
+
         {/* Time Filters */}
         <div className="filter-buttons">
-          <button
-            className={filterType === "all" ? "active" : ""}
-            onClick={() => applyFilter("all")}
-          >
-            🌎 All
-          </button>
-          <button
-            className={filterType === "day" ? "active" : ""}
-            onClick={() => applyFilter("day")}
-          >
-            📅 Today
-          </button>
-          <button
-            className={filterType === "month" ? "active" : ""}
-            onClick={() => applyFilter("month")}
-          >
-            🗓️ This Month
-          </button>
-          <button
-            className={filterType === "year" ? "active" : ""}
-            onClick={() => applyFilter("year")}
-          >
-            📆 This Year
-          </button>
+          <button className={filterType === "all" ? "active" : ""} onClick={() => applyFilter("all")}>🌎 All</button>
+          <button className={filterType === "day" ? "active" : ""} onClick={() => applyFilter("day")}>📅 Today</button>
+          <button className={filterType === "month" ? "active" : ""} onClick={() => applyFilter("month")}>🗓️ This Month</button>
+          <button className={filterType === "year" ? "active" : ""} onClick={() => applyFilter("year")}>📆 This Year</button>
         </div>
 
         {/* Refresh Button */}
-        <button 
-          className="refresh-btn" 
+        <button
+          className="refresh-btn"
           onClick={() => fetchData(selectedProduct)}
           disabled={loading}
         >
@@ -163,57 +168,58 @@ function App() {
 
       <main className="main-content">
         {loading ? (
-          <div className="loading">
-            <div>⏳ Loading latest {selectedProduct} opportunities...</div>
-          </div>
+          <div className="loading">⏳ Loading latest {selectedProduct} opportunities...</div>
         ) : filtered.length === 0 ? (
           <div className="empty">
-            <div>
-              <h3>No opportunities found</h3>
-              <p>No opportunities found for <strong>{selectedProduct}</strong> ({getFilterDisplayText()}).</p>
-              <p>Try adjusting your search criteria or check back later.</p>
-            </div>
+            <h3>No opportunities found</h3>
+            <p>No opportunities for <strong>{selectedProduct}</strong> ({getFilterDisplayText()}).</p>
           </div>
         ) : (
           <>
             {/* Results Summary */}
-            <div style={{
-              marginBottom: '1.5rem',
-              padding: '1rem',
-              background: 'white',
-              borderRadius: '12px',
-              border: '1px solid var(--border)',
-              display: 'flex',
-              justifyContent: 'space-between',
-              alignItems: 'center',
-              flexWrap: 'wrap',
-              gap: '1rem'
-            }}>
+            <div
+              style={{
+                marginBottom: "1.5rem",
+                padding: "1rem",
+                background: "white",
+                borderRadius: "12px",
+                border: "1px solid var(--border)",
+                display: "flex",
+                justifyContent: "space-between",
+                alignItems: "center",
+                flexWrap: "wrap",
+                gap: "1rem",
+              }}
+            >
               <div>
                 <strong>{filtered.length}</strong> opportunities found for <strong>{selectedProduct}</strong>
               </div>
-              <div style={{ 
-                fontSize: '0.875rem', 
-                color: 'var(--text-secondary)',
-                display: 'flex',
-                alignItems: 'center',
-                gap: '0.5rem'
-              }}>
-                <span style={{
-                  width: '8px',
-                  height: '8px',
-                  borderRadius: '50%',
-                  background: 'var(--success)',
-                  animation: 'pulse 2s infinite'
-                }}></span>
+              <div
+                style={{
+                  fontSize: "0.875rem",
+                  color: "var(--text-secondary)",
+                  display: "flex",
+                  alignItems: "center",
+                  gap: "0.5rem",
+                }}
+              >
+                <span
+                  style={{
+                    width: "8px",
+                    height: "8px",
+                    borderRadius: "50%",
+                    background: "var(--success)",
+                    animation: "pulse 2s infinite",
+                  }}
+                ></span>
                 Filter: {getFilterDisplayText()}
               </div>
             </div>
 
-            {/* Cards Grid */}
+            {/* Cards */}
             <div className="card-grid">
               {filtered.map((opp, index) => (
-                <div key={opp.id} className="card">
+                <div key={opp.link || index} className="card">
                   <h2>{opp.title}</h2>
                   <div className="meta">
                     <strong>Source:</strong> {opp.source} <br />
