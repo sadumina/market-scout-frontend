@@ -138,3 +138,66 @@
 .card .read-more:hover {
   color: #005bb5;
 }
+
+.product-filter {
+  margin: 15px 0;
+  text-align: center;
+}
+
+.product-filter label {
+  font-weight: bold;
+  margin-right: 10px;
+}
+
+.product-filter select {
+  padding: 8px 14px;
+  border-radius: 6px;
+  border: 1px solid #ccc;
+  font-size: 1rem;
+}
+/* Dropdown Container */
+.product-filter {
+  margin: 1rem 0;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+/* Label Styling */
+.dropdown-label {
+  font-weight: bold;
+  font-size: 1rem;
+  color: #333;
+}
+
+/* Dropdown Styling */
+.dropdown {
+  padding: 8px 12px;
+  border-radius: 8px;
+  border: 2px solid #4cafef;
+  background: #f9fbfd;
+  font-size: 1rem;
+  color: #333;
+  cursor: pointer;
+  transition: all 0.2s ease-in-out;
+}
+
+/* Hover Effect */
+.dropdown:hover {
+  border-color: #1976d2;
+  background: #eef6fc;
+}
+
+/* Focused Dropdown */
+.dropdown:focus {
+  outline: none;
+  border-color: #0d47a1;
+  box-shadow: 0px 0px 6px rgba(25, 118, 210, 0.5);
+}
+
+/* Option Styling */
+.dropdown option {
+  padding: 8px;
+  background: #fff;
+  color: #333;
+}
