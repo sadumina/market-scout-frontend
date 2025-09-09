@@ -38,6 +38,9 @@ function App() {
       setFiltered(res.data);
     } catch (err) {
       console.error("Error fetching opportunities:", err);
+      // Set empty arrays on error
+      setOpportunities([]);
+      setFiltered([]);
     } finally {
       setLoading(false);
     }
@@ -66,29 +69,59 @@ function App() {
     }
   };
 
+  // Enhanced date formatting
+  const formatDate = (dateString) => {
+    if (!dateString) return "N/A";
+    
+    const date = new Date(dateString);
+    const now = new Date();
+    const diffInHours = (now - date) / (1000 * 60 * 60);
+    
+    if (diffInHours < 24) {
+      return `${Math.floor(diffInHours)} hours ago`;
+    } else if (diffInHours < 48) {
+      return "Yesterday";
+    } else {
+      return date.toLocaleDateString('en-US', {
+        year: 'numeric',
+        month: 'short',
+        day: 'numeric'
+      });
+    }
+  };
+
+  // Get filter display text
+  const getFilterDisplayText = () => {
+    switch (filterType) {
+      case "day": return "Today";
+      case "month": return "This Month";
+      case "year": return "This Year";
+      default: return "All Time";
+    }
+  };
+
   return (
     <div className="app-container">
       <header className="header">
-        <h1> AI Market Scout Dashboard</h1>
+        <h1>AI Market Scout Dashboard</h1>
         <p>Stay ahead with real-time environmental & market intelligence</p>
 
         {/* Product Dropdown */}
-      <div className="product-filter">
-         <label htmlFor="product" className="dropdown-label">Select Product:</label>
-             <select
-                  id="product"
-                  className="dropdown"
-                  value={selectedProduct}
-                  onChange={(e) => setSelectedProduct(e.target.value)}
-             >
-             {PRODUCTS.map((p) => (
+        <div className="product-filter">
+          <label htmlFor="product" className="dropdown-label">Select Product:</label>
+          <select
+            id="product"
+            className="dropdown"
+            value={selectedProduct}
+            onChange={(e) => setSelectedProduct(e.target.value)}
+          >
+            {PRODUCTS.map((p) => (
               <option key={p} value={p}>
-                 {p}
+                {p}
               </option>
-                ))}
-           </select>
-      </div>
-
+            ))}
+          </select>
+        </div>
 
         {/* Time Filters */}
         <div className="filter-buttons">
@@ -96,7 +129,7 @@ function App() {
             className={filterType === "all" ? "active" : ""}
             onClick={() => applyFilter("all")}
           >
-            🌍 All
+            🌎 All
           </button>
           <button
             className={filterType === "day" ? "active" : ""}
@@ -119,40 +152,86 @@ function App() {
         </div>
 
         {/* Refresh Button */}
-        <button className="refresh-btn" onClick={() => fetchData(selectedProduct)}>
-          🔄 Refresh
+        <button 
+          className="refresh-btn" 
+          onClick={() => fetchData(selectedProduct)}
+          disabled={loading}
+        >
+          🔄 {loading ? "Refreshing..." : "Refresh"}
         </button>
       </header>
 
       <main className="main-content">
         {loading ? (
-          <div className="loading">⏳ Loading latest updates...</div>
+          <div className="loading">
+            <div>⏳ Loading latest {selectedProduct} opportunities...</div>
+          </div>
         ) : filtered.length === 0 ? (
           <div className="empty">
-            🚀 No opportunities found for {selectedProduct} ({filterType}).
+            <div>
+              <h3>No opportunities found</h3>
+              <p>No opportunities found for <strong>{selectedProduct}</strong> ({getFilterDisplayText()}).</p>
+              <p>Try adjusting your search criteria or check back later.</p>
+            </div>
           </div>
         ) : (
-          <div className="card-grid">
-            {filtered.map((opp) => (
-              <div key={opp.id} className="card">
-                <h2>{opp.title}</h2>
-                <p className="meta">
-                  <strong>Source:</strong> {opp.source} <br />
-                  <strong>Date:</strong>{" "}
-                  {opp.date ? new Date(opp.date).toLocaleString() : "N/A"}
-                </p>
-                <p className="summary">{opp.summary}</p>
-                <a
-                  href={opp.link}
-                  target="_blank"
-                  rel="noreferrer"
-                  className="read-more"
-                >
-                  🔗 Read More
-                </a>
+          <>
+            {/* Results Summary */}
+            <div style={{
+              marginBottom: '1.5rem',
+              padding: '1rem',
+              background: 'white',
+              borderRadius: '12px',
+              border: '1px solid var(--border)',
+              display: 'flex',
+              justifyContent: 'space-between',
+              alignItems: 'center',
+              flexWrap: 'wrap',
+              gap: '1rem'
+            }}>
+              <div>
+                <strong>{filtered.length}</strong> opportunities found for <strong>{selectedProduct}</strong>
               </div>
-            ))}
-          </div>
+              <div style={{ 
+                fontSize: '0.875rem', 
+                color: 'var(--text-secondary)',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '0.5rem'
+              }}>
+                <span style={{
+                  width: '8px',
+                  height: '8px',
+                  borderRadius: '50%',
+                  background: 'var(--success)',
+                  animation: 'pulse 2s infinite'
+                }}></span>
+                Filter: {getFilterDisplayText()}
+              </div>
+            </div>
+
+            {/* Cards Grid */}
+            <div className="card-grid">
+              {filtered.map((opp, index) => (
+                <div key={opp.id} className="card">
+                  <h2>{opp.title}</h2>
+                  <div className="meta">
+                    <strong>Source:</strong> {opp.source} <br />
+                    <strong>Date:</strong> {formatDate(opp.date)}
+                  </div>
+                  <p className="summary">{opp.summary}</p>
+                  <a
+                    href={opp.link}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="read-more"
+                  >
+                    🔗 Read Full Article
+                  </a>
+                </div>
+              ))}
+            </div>
+          </>
         )}
       </main>
     </div>
