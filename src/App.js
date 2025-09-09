@@ -25,7 +25,7 @@ const PRODUCTS = [
 
 ];
 
-const API_BASE = "http://localhost:8000"; // change this after deploy
+const API_BASE = "https://scout-agent-rslp.onrender.com"; // change this after deploy
 
 function App() {
   const [opportunities, setOpportunities] = useState([]);
