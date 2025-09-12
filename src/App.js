@@ -2,8 +2,6 @@ import React, { useEffect, useState } from "react";
 import axios from "axios";
 import "./App.css";
 
-
-
 const PRODUCTS = [
   { name: "PFAS" },
   { name: "Soil Remediation" },
@@ -26,10 +24,12 @@ const PRODUCTS = [
   { name: "Activated Carbon for Gold Recovery" },
   { name: "Activated Carbon for EDLC" },
   { name: "Activated Carbon for Silicon Anodes" },
-  
+  { name: "Jacobi Updates" },
+  { name: "Jacobi Profile" },
+  { name: "Haycarb Updates" },
 ];
 
-const API_BASE = "https://scout-agent-rslp.onrender.com"; // change after deploy
+const API_BASE = "https://scoutagent-xk4c.onrender.com"; // update after deploy
 
 function App() {
   const [opportunities, setOpportunities] = useState([]);
@@ -44,8 +44,10 @@ function App() {
       const res = await axios.get(
         `${API_BASE}/opportunities?product=${encodeURIComponent(product)}`
       );
-      setOpportunities(res.data);
-      setFiltered(res.data);
+      // Ensure Jacobi Profile data is always an array
+      const data = Array.isArray(res.data) ? res.data : [res.data];
+      setOpportunities(data);
+      setFiltered(data);
     } catch (err) {
       console.error("Error fetching opportunities:", err);
       setOpportunities([]);
@@ -86,11 +88,6 @@ function App() {
   const formatDate = (dateString) => {
     if (!dateString) return "N/A";
     const date = new Date(dateString);
-    const now = new Date();
-    const diffInHours = (now - date) / (1000 * 60 * 60);
-
-    if (diffInHours < 24) return `${Math.floor(diffInHours)} hours ago`;
-    if (diffInHours < 48) return "Yesterday";
     return date.toLocaleDateString("en-US", {
       year: "numeric",
       month: "short",
@@ -100,11 +97,103 @@ function App() {
 
   const getFilterDisplayText = () => {
     switch (filterType) {
-      case "day": return "Today";
-      case "month": return "This Month";
-      case "year": return "This Year";
-      default: return "All Time";
+      case "day":
+        return "Today";
+      case "month":
+        return "This Month";
+      case "year":
+        return "This Year";
+      default:
+        return "All Time";
     }
+  };
+
+  const renderContent = () => {
+    if (selectedProduct === "Haycarb Updates") {
+      return (
+        <div className="jacobi-haycarb-section">
+          <h2>Haycarb Media Updates</h2>
+          <div className="card-grid">
+            {filtered.map((opp, idx) => (
+              <div key={idx} className="card">
+                <h2>{opp.title}</h2>
+                <div className="meta">
+                  <strong>Date:</strong> {formatDate(opp.pub_date || opp.date)}
+                </div>
+                <p className="summary">{opp.summary || opp.description}</p>
+                <a href={opp.link} target="_blank" rel="noreferrer" className="read-more">
+                  🔗 Read Full Article
+                </a>
+              </div>
+            ))}
+          </div>
+        </div>
+      );
+    }
+
+    if (selectedProduct === "Jacobi Updates") {
+      return (
+        <div className="jacobi-haycarb-section">
+          <h2>Jacobi News Updates</h2>
+          <ul className="updates-list">
+            {filtered.map((item, idx) => (
+              <li key={idx}>
+                <a href={item.link} target="_blank" rel="noreferrer">
+                  {item.title}
+                </a>
+              </li>
+            ))}
+          </ul>
+        </div>
+      );
+    }
+
+    if (selectedProduct === "Jacobi Profile") {
+      return (
+        <div className="jacobi-profile-section">
+          <h2>Jacobi Carbons – Company Profile</h2>
+          {filtered.length > 0 && (
+            <div className="profile-card">
+              <h3>{filtered[0].company_name}</h3>
+              <p><strong>Founded:</strong> {filtered[0].founded}</p>
+              <p><strong>Products:</strong> {filtered[0].product_range}</p>
+              <p>
+                <strong>Website:</strong>{" "}
+                <a href={filtered[0].website} target="_blank" rel="noreferrer">
+                  {filtered[0].website}
+                </a>
+              </p>
+              <p><strong>Address:</strong> {filtered[0].address}</p>
+            </div>
+          )}
+        </div>
+      );
+    }
+
+    // Default UI
+    return (
+      <>
+        <div className="results-summary">
+          <strong>{filtered.length}</strong> opportunities for{" "}
+          <strong>{selectedProduct}</strong>
+        </div>
+        <div className="card-grid">
+          {filtered.map((opp, idx) => (
+            <div key={idx} className="card">
+              <h2>{opp.title}</h2>
+              <div className="meta">
+                <strong>Source:</strong> {opp.source} <br />
+                <strong>Date:</strong> {formatDate(opp.date)}
+              </div>
+              <p className="summary">{opp.summary}</p>
+              <a href={opp.link} target="_blank" rel="noreferrer" className="read-more">
+                🔗 Read Full Article
+              </a>
+            </div>
+          ))}
+        </div>
+      </>
+    );
   };
 
   return (
@@ -115,7 +204,9 @@ function App() {
 
         {/* Product Dropdown */}
         <div className="product-filter">
-          <label htmlFor="product" className="dropdown-label">Select Product:</label>
+          <label htmlFor="product" className="dropdown-label">
+            Select Product:
+          </label>
           <select
             id="product"
             className="dropdown"
@@ -130,13 +221,33 @@ function App() {
           </select>
         </div>
 
-        {/* Time Filters (hide for Jacobi & Haycarb) */}
-        {!(selectedProduct === "Jacobi Updates" || selectedProduct === "Haycarb Updates") && (
+        {/* Time Filters (skip for Jacobi/Haycarb/Profile) */}
+        {!(["Jacobi Updates", "Jacobi Profile", "Haycarb Updates"].includes(selectedProduct)) && (
           <div className="filter-buttons">
-            <button className={filterType === "all" ? "active" : ""} onClick={() => applyFilter("all")}>🌎 All</button>
-            <button className={filterType === "day" ? "active" : ""} onClick={() => applyFilter("day")}>📅 Today</button>
-            <button className={filterType === "month" ? "active" : ""} onClick={() => applyFilter("month")}>🗓️ This Month</button>
-            <button className={filterType === "year" ? "active" : ""} onClick={() => applyFilter("year")}>📆 This Year</button>
+            <button
+              className={filterType === "all" ? "active" : ""}
+              onClick={() => applyFilter("all")}
+            >
+              🌎 All
+            </button>
+            <button
+              className={filterType === "day" ? "active" : ""}
+              onClick={() => applyFilter("day")}
+            >
+              📅 Today
+            </button>
+            <button
+              className={filterType === "month" ? "active" : ""}
+              onClick={() => applyFilter("month")}
+            >
+              🗓️ This Month
+            </button>
+            <button
+              className={filterType === "year" ? "active" : ""}
+              onClick={() => applyFilter("year")}
+            >
+              📆 This Year
+            </button>
           </div>
         )}
 
@@ -155,53 +266,13 @@ function App() {
         ) : filtered.length === 0 ? (
           <div className="empty">
             <h3>No updates found</h3>
-            <p>No updates for <strong>{selectedProduct}</strong> ({getFilterDisplayText()}).</p>
+            <p>
+              No updates for <strong>{selectedProduct}</strong> (
+              {getFilterDisplayText()}).
+            </p>
           </div>
         ) : (
-          <>
-            {selectedProduct === "Jacobi Updates" || selectedProduct === "Haycarb Updates" ? (
-              // ✅ Custom UI for Jacobi & Haycarb
-              <div className="jacobi-haycarb-section">
-                <h2>{selectedProduct}</h2>
-                <ul className="updates-list">
-                  {filtered.map((item, idx) => (
-                    <li key={idx}>
-                      <a href={item.link} target="_blank" rel="noreferrer">
-                        {item.title}
-                      </a>
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            ) : (
-              // ✅ Default UI
-              <>
-                <div className="results-summary">
-                  <strong>{filtered.length}</strong> opportunities for <strong>{selectedProduct}</strong>
-                </div>
-                <div className="card-grid">
-                  {filtered.map((opp, index) => (
-                    <div key={opp.link || index} className="card">
-                      <h2>{opp.title}</h2>
-                      <div className="meta">
-                        <strong>Source:</strong> {opp.source} <br />
-                        <strong>Date:</strong> {formatDate(opp.date)}
-                      </div>
-                      <p className="summary">{opp.summary}</p>
-                      <a
-                        href={opp.link}
-                        target="_blank"
-                        rel="noreferrer"
-                        className="read-more"
-                      >
-                        🔗 Read Full Article
-                      </a>
-                    </div>
-                  ))}
-                </div>
-              </>
-            )}
-          </>
+          renderContent()
         )}
       </main>
     </div>
@@ -209,5 +280,3 @@ function App() {
 }
 
 export default App;
-
-
